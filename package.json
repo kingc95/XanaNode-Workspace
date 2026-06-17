@@ -1,0 +1,45 @@
+{
+  "name": "@xananode/workspace",
+  "version": "0.1.0",
+  "description": "Local-first workspace engine for XanaNode Studio, CLI, and editor integrations.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./cli": "./src/cli.js"
+  },
+  "bin": {
+    "xananode-workspace": "./bin/xananode-workspace.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "templates",
+    "README.md",
+    "LICENSE",
+    "vendor/xananode-core"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "sdk:init": "git submodule update --init --recursive vendor/xananode-core && npm install",
+    "sdk:update": "git submodule update --init --remote --merge vendor/xananode-core && npm install",
+    "sdk:status": "git submodule status --recursive",
+    "demo": "node ./bin/xananode-workspace.js init ./tmp-demo --name \"Demo Substrate\" --author \"Demo Author\" && node ./bin/xananode-workspace.js status ./tmp-demo"
+  },
+  "keywords": [
+    "xananode",
+    "workspace",
+    "knowledge-graph",
+    "git",
+    "local-first",
+    "studio"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@xananode/core": "file:./vendor/xananode-core",
+    "commander": "^12.1.0"
+  },
+  "peerDependencies": {
+    "@xananode/core": ">=0.1.0"
+  }
+}

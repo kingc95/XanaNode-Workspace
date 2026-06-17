@@ -1,0 +1,4 @@
+[submodule "vendor/xananode-core"]
+	path = vendor/xananode-core
+	url = https://github.com/kingc95/XanaNode-Core-SDK.git
+	branch = main
