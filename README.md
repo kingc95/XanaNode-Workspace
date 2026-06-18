@@ -1,6 +1,6 @@
 # @xananode/workspace
 
-A renderer-independent workspace engine for the XanaNode protocol. It exists to keep workspace, project, and collaboration concerns out of any one presentation layer. CLIs, desktop applications, web editors, and future integrations should be able to use the same workspace initialization, asset management, import resolution, and knowledge health computation.
+A renderer-independent workspace engine for the XanaNode protocol. It exists to keep workspace, project, and collaboration concerns out of any one presentation layer. CLIs, desktop applications, web editors, and future integrations should be able to use the same workspace initialization, asset management, import tracking, and knowledge health computation.
 
 This package sits between:
 
@@ -16,7 +16,7 @@ Future UIs           human interfaces: catalog, graph/preview, editor panels
 - **Maintains workspace state** through `.xananode/workspace.json`, `.xananode/authors.json`, and `.xananode/imports.json`.
 - **Manages assets** and creates media nodes or source document references.
 - **Wraps Git** as human-friendly snapshots for collaboration and version history.
-- **Resolves imports** for federated substrate dependencies.
+- **Records imports** for federated substrate dependencies.
 - **Validates and builds** via `@xananode/core`.
 - **Computes knowledge health** to identify gaps and quality issues.
 
