@@ -5,6 +5,7 @@ import {
   buildWorkspace,
   computeKnowledgeHealth,
   createNode,
+  exportWorkspacePack,
   gitLog,
   gitStatus,
   importAssetAsNode,
@@ -104,6 +105,23 @@ export async function runWorkspaceCli(argv = process.argv) {
       console.log(`Nodes: ${result.substrate.protocolNodes.length}`);
       console.log(`Relationships: ${result.substrate.relationships.length}`);
       console.log(`Valid: ${result.substrate.validation.valid}`);
+    });
+
+  program.command("pack")
+    .argument("[dir]", "workspace directory", ".")
+    .option("--out <dir>", "pack output directory")
+    .option("--id <id>", "pack id")
+    .option("--name <name>", "pack name")
+    .option("--namespace <namespace>", "pack namespace")
+    .option("--version <version>", "pack version")
+    .option("--mode <mode>", "pack composition mode", "mounted")
+    .description("export a portable substrate pack for renderers such as XanaNode Hugo")
+    .action(async (dir, options) => {
+      const result = await exportWorkspacePack(path.resolve(dir), options);
+      console.log(`Exported substrate pack to ${result.outputDir}`);
+      console.log(`Pack: ${result.pack.manifest.id}`);
+      console.log(`Nodes: ${result.pack.node_count}`);
+      console.log(`Relationships: ${result.pack.relationship_count}`);
     });
 
   program.command("author")

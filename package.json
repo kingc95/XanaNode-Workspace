@@ -34,7 +34,7 @@
     "local-first",
     "studio"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@xananode/core": "file:./vendor/xananode-core",
     "commander": "^12.1.0"

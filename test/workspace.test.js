@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { buildWorkspace, computeKnowledgeHealth, createNode, initWorkspace, openWorkspace } from "../src/index.js";
+import { buildWorkspace, computeKnowledgeHealth, createNode, exportWorkspacePack, initWorkspace, openWorkspace } from "../src/index.js";
 
 test("workspace init, node creation, health, and build", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "xananode-workspace-"));
@@ -23,4 +23,10 @@ test("workspace init, node creation, health, and build", async () => {
   const built = await buildWorkspace(dir, { out: path.join(dir, "public") });
   assert.ok(fs.existsSync(path.join(built.outputDir, "substrate.json")));
   assert.ok(fs.existsSync(path.join(built.outputDir, "relationships.json")));
+
+  const exported = await exportWorkspacePack(dir, { out: path.join(dir, "packs", "workspace-test") });
+  assert.ok(fs.existsSync(path.join(exported.outputDir, "substrate.json")));
+  assert.ok(fs.existsSync(path.join(exported.outputDir, "nodes.json")));
+  assert.ok(fs.existsSync(path.join(exported.outputDir, "relationships.json")));
+  assert.equal(exported.pack.manifest.pack.mode, "mounted");
 });

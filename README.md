@@ -2,6 +2,8 @@
 
 A renderer-independent workspace engine for the XanaNode protocol. It exists to keep workspace, project, and collaboration concerns out of any one presentation layer. CLIs, desktop applications, web editors, and future integrations should be able to use the same workspace initialization, asset management, import tracking, and knowledge health computation.
 
+This project is a XanaNode-compatible workspace implementation. Canonical specification: `https://github.com/kingc95/XanaNode`. Workspace/reference implementation code is licensed under `Apache-2.0`; protocol documentation is licensed separately under `CC-BY-4.0`.
+
 This package sits between:
 
 ```text
@@ -160,7 +162,7 @@ The workspace engine uses Git internally, but user-facing applications should ex
 
 This package does not depend on rendering engines like Hugo or web frameworks. Future renderers can consume `@xananode/core` and `@xananode/workspace` independently. The core protocol remains the reference implementation.
 
-### Imports as knowledge dependencies
+### Packs as knowledge dependencies
 
 Substrates can record dependencies on other substrates—like season-level collections, schema packs, domain knowledge, or institutional repositories—in `.xananode/imports.json`. This enables:
 
@@ -168,6 +170,36 @@ Substrates can record dependencies on other substrates—like season-level colle
 - Shared schemas and types
 - Institutional knowledge bases
 - Cross-workspace collaboration
+
+Workspace imports should remain protocol-shaped. Packs can be mounted or absorbed:
+
+- Mounted packs are enabled at analysis or build time while remaining governed by their source repository.
+- Absorbed packs are reviewed, merged, and made part of the receiving substrate's own authorship.
+
+Workspace is the right layer for pack management UX: enable or disable packs, preview what they add, compare versions, show Core merge candidates, and perform an explicit absorption step when the substrate owner accepts incoming records permanently.
+
+A renderer such as XanaNode Hugo can ingest exported node and relationship JSON directly from an `imports/` folder or a configured mounted pack instead of forcing authors to recreate every imported object as Markdown front matter.
+
+The intended flow is:
+
+```text
+Workspace/Core generates or validates protocol JSON
+Hugo site drops that JSON under imports/
+Hugo prepare merges imports with Markdown-authored local nodes
+Hugo publishes protocol artifacts plus a read-only viewer
+```
+
+Markdown is an authoring convenience, not the substrate source of truth.
+
+To export a portable pack for Hugo or another projection layer:
+
+```bash
+xananode-workspace pack ./my-substrate --out ./packs/my-substrate
+```
+
+That writes `substrate.json`, `nodes.json`, `relationships.json`, per-node JSON files, and `pack-report.json`. In Studio, the same workflow is the **Export Pack** button. By default it writes to `packs/local` in mounted mode, so the pack remains governed by its source substrate until the author explicitly absorbs or merges it.
+
+Core should evaluate incoming packs before a renderer or UI applies them. Use Core pack loading and intake analysis to identify possible same-entity merges, new nodes, incoming relationships touching existing nodes, possible transclusions, and possible title/alias links. Workspace records the import dependency and can later expose those Core suggestions in a human review workflow.
 
 ## Current scope
 

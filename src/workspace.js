@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { buildSubstrate, initSubstrate, loadManifest, loadMarkdownNodes, writeMarkdownNode, writeSubstrateArtifacts, slugify } from "@xananode/core";
+import { buildSubstrate, initSubstrate, loadManifest, loadMarkdownNodes, writeCanonicalPack, writeMarkdownNode, writeSubstrateArtifacts, slugify } from "@xananode/core";
 import { ensureDir, readJsonFile, safeRelativePath, writeJsonFile } from "./fs-utils.js";
 import { addImport, loadImports } from "./imports.js";
 import { getDefaultAuthor, loadAuthors, upsertAuthor } from "./authors.js";
@@ -27,7 +27,8 @@ export function loadWorkspaceSettings(rootDir) {
       url: "http://localhost:1313"
     },
     build: {
-      output_dir: "public"
+      output_dir: "public",
+      pack_dir: "packs/local"
     },
     studio: {
       default_left_view: "catalog",
@@ -59,7 +60,8 @@ export async function initWorkspace(targetDir, options = {}) {
       url: options.previewUrl || "http://localhost:1313"
     },
     build: {
-      output_dir: options.outputDir || "public"
+      output_dir: options.outputDir || "public",
+      pack_dir: options.packDir || "packs/local"
     },
     studio: {
       default_left_view: "catalog",
@@ -112,6 +114,23 @@ export async function buildWorkspace(rootDir, options = {}) {
   return { outputDir, substrate };
 }
 
+export async function exportWorkspacePack(rootDir, options = {}) {
+  const resolved = path.resolve(rootDir);
+  const settings = loadWorkspaceSettings(resolved);
+  const manifest = loadManifest(resolved, options.manifest || {});
+  const outputDir = path.resolve(resolved, options.out || settings.build?.pack_dir || "packs/local");
+  const pack = await writeCanonicalPack([resolved], outputDir, {
+    id: options.id || `${manifest.namespace || "local"}.pack`,
+    name: options.name || `${manifest.name || "Local XanaNode Substrate"} Pack`,
+    namespace: options.namespace || manifest.namespace || "local",
+    version: options.version || manifest.version || "0.1.0",
+    description: options.description || manifest.description,
+    schemaVersion: options.schemaVersion || manifest.schema_version,
+    mode: options.mode || "mounted"
+  });
+  return { outputDir, pack };
+}
+
 export async function validateWorkspace(rootDir, options = {}) {
   const substrate = await buildSubstrate(path.resolve(rootDir), options.core || {});
   return substrate.validation;
@@ -147,6 +166,7 @@ export function workspaceApi(rootDir) {
     rootDir: resolved,
     open: (options) => openWorkspace(resolved, options),
     build: (options) => buildWorkspace(resolved, options),
+    exportPack: (options) => exportWorkspacePack(resolved, options),
     validate: (options) => validateWorkspace(resolved, options),
     health: (options) => computeKnowledgeHealth(resolved, options),
     createNode: (node, body, options) => createNode(resolved, node, body, options),
