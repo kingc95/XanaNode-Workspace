@@ -10,6 +10,7 @@ import {
   gitStatus,
   importAssetAsNode,
   initWorkspace,
+  openPackAsWorkspace,
   openWorkspace,
   saveSnapshot,
   upsertAuthor,
@@ -70,6 +71,25 @@ export async function runWorkspaceCli(argv = process.argv) {
       console.log(`Authors: ${workspace.authors.authors.length}`);
       console.log(`Imports: ${workspace.imports.imports.length}`);
       console.log(`Git: ${workspace.git.enabled ? "enabled" : "not initialized"}`);
+    });
+
+  program.command("open-pack")
+    .argument("<pack>", "pack folder or pack JSON file")
+    .argument("[dir]", "workspace directory to create")
+    .option("--name <name>", "working copy name")
+    .option("--namespace <namespace>", "working copy namespace")
+    .option("--author <name>", "active author name")
+    .option("--author-id <id>", "active author id")
+    .option("--author-email <email>", "active author email")
+    .option("--no-git", "do not initialize a Git repository")
+    .description("open an existing substrate pack as an editable local working copy")
+    .action(async (pack, dir, options) => {
+      const target = path.resolve(dir || `${path.basename(path.resolve(pack))}-working-copy`);
+      const workspace = await openPackAsWorkspace(path.resolve(pack), target, options);
+      console.log(`Opened pack as working copy: ${workspace.manifest.name}`);
+      console.log(`Source pack: ${workspace.settings.source_pack?.id || workspace.manifest.source_pack?.id || "unknown"}`);
+      console.log(`Nodes: ${workspace.nodes.length}`);
+      console.log(`Path: ${workspace.rootDir}`);
     });
 
   program.command("status")

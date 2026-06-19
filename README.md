@@ -199,6 +199,14 @@ xananode-workspace pack ./my-substrate --out ./packs/my-substrate
 
 That writes `substrate.json`, `nodes.json`, `relationships.json`, per-node JSON files, and `pack-report.json`. In Studio, the same workflow is the **Export Pack** button. By default it writes to `packs/local` in mounted mode, so the pack remains governed by its source substrate until the author explicitly absorbs or merges it.
 
+To open a pack someone sent you as editable local work:
+
+```bash
+xananode-workspace open-pack ./packs/xananode-canonical ./canonical-working-copy --author "Your Name"
+```
+
+Workspace calls this a **working copy**. The source pack's node IDs and relationships are preserved for comparison, but your edits are local **proposals** until the source substrate owner accepts them. This is not a silent edit to the original pack and it does not mean you own that substrate's main line of authorship.
+
 Core should evaluate incoming packs before a renderer or UI applies them. Use Core pack loading and intake analysis to identify possible same-entity merges, new nodes, incoming relationships touching existing nodes, possible transclusions, and possible title/alias links. Workspace records the import dependency and can later expose those Core suggestions in a human review workflow.
 
 ## Current scope

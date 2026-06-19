@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { buildSubstrate, initSubstrate, loadManifest, loadMarkdownNodes, writeCanonicalPack, writeMarkdownNode, writeSubstrateArtifacts, slugify } from "@xananode/core";
+import { buildSubstrate, initSubstrate, loadManifest, loadMarkdownNodes, loadSubstratePack, writeCanonicalPack, writeMarkdownNode, writeSubstrateArtifacts, slugify } from "@xananode/core";
 import { ensureDir, readJsonFile, safeRelativePath, writeJsonFile } from "./fs-utils.js";
 import { addImport, loadImports } from "./imports.js";
 import { getDefaultAuthor, loadAuthors, upsertAuthor } from "./authors.js";
@@ -131,6 +131,142 @@ export async function exportWorkspacePack(rootDir, options = {}) {
   return { outputDir, pack };
 }
 
+export async function openPackAsWorkspace(packSource, targetDir, options = {}) {
+  const sourcePath = path.resolve(packSource);
+  const sourceRoot = fs.existsSync(sourcePath) && fs.statSync(sourcePath).isFile()
+    ? path.dirname(sourcePath)
+    : sourcePath;
+  if (!fs.existsSync(sourceRoot)) throw new Error(`Pack source does not exist: ${sourceRoot}`);
+
+  const loaded = loadSubstratePack(sourceRoot, {
+    pack: {
+      source: sourceRoot,
+      mode: "working_copy"
+    }
+  });
+  if (loaded.errors?.length) {
+    throw new Error(`Pack could not be opened: ${loaded.errors.map((error) => error.message || error.kind).join("; ")}`);
+  }
+  if (!loaded.nodes.length) throw new Error("Pack did not contain any node records.");
+
+  const manifest = loaded.manifest || {};
+  const name = options.name || `${manifest.name || loaded.pack.id || "Imported Pack"} Working Copy`;
+  const namespace = options.namespace || manifest.namespace || slugify(name, "substrate");
+  const resolvedTarget = path.resolve(targetDir);
+  if (fs.existsSync(resolvedTarget) && fs.readdirSync(resolvedTarget).length && options.overwrite !== true) {
+    throw new Error(`Target workspace is not empty: ${resolvedTarget}`);
+  }
+
+  ensureDir(resolvedTarget);
+  ensureDir(path.join(resolvedTarget, "content", "nodes"));
+  ensureDir(path.join(resolvedTarget, "assets"));
+  ensureDir(workspaceDir(resolvedTarget));
+
+  writeJsonFile(path.join(resolvedTarget, "substrate.json"), {
+    id: manifest.id || namespace,
+    name,
+    version: manifest.version || "0.1.0",
+    namespace,
+    schema_version: manifest.schema_version || "xananode-core@0.5.0",
+    repository: manifest.repository || { type: "git", url: "local", default_branch: "main" },
+    imports: manifest.imports || [],
+    extensions: manifest.extensions || [],
+    maintainers: manifest.maintainers || [],
+    source_pack: {
+      id: manifest.id || loaded.pack.id || null,
+      name: manifest.name || null,
+      namespace: manifest.namespace || null,
+      version: manifest.version || null,
+      source: sourceRoot,
+      opened_as: "working_copy",
+      opened_at: new Date().toISOString()
+    }
+  });
+
+  saveWorkspaceSettings(resolvedTarget, {
+    ...loadWorkspaceSettings(resolvedTarget),
+    mode: "working_copy",
+    source_pack: {
+      id: manifest.id || loaded.pack.id || null,
+      name: manifest.name || null,
+      namespace: manifest.namespace || null,
+      version: manifest.version || null,
+      source: sourceRoot
+    },
+    authorship: {
+      status: "proposal",
+      active_author_id: options.authorId || null,
+      note: "This workspace is an editable copy of an existing pack. Changes are proposals until accepted by the source substrate owner."
+    }
+  });
+
+  if (options.author || options.authorId || options.authorEmail) {
+    upsertAuthor(resolvedTarget, {
+      id: options.authorId || slugify(options.author || options.authorEmail || "working-copy-author", "author"),
+      name: options.author || options.authorId || "Working Copy Author",
+      email: options.authorEmail,
+      default: true,
+      roles: ["author", "proposer"]
+    });
+  }
+
+  const uniqueRelationships = uniqueRecordsById(loaded.relationships || []);
+  const uniqueNodes = uniqueRecordsById(loaded.nodes || []);
+  const relationshipsBySource = new Map();
+  for (const relationship of uniqueRelationships) {
+    const source = relationship.source;
+    if (!source) continue;
+    if (!relationshipsBySource.has(source)) relationshipsBySource.set(source, []);
+    relationshipsBySource.get(source).push({
+      type: relationship.type || "related_to",
+      target: relationship.target,
+      summary: relationship.summary || "",
+      ...(relationship.weight ? { weight: relationship.weight } : {}),
+      ...(relationship.visibility ? { visibility: relationship.visibility } : {}),
+      ...(relationship.valid_from ? { valid_from: relationship.valid_from } : {}),
+      ...(relationship.valid_to ? { valid_to: relationship.valid_to } : {}),
+      ...(relationship.id ? { source_relationship_id: relationship.id } : {})
+    });
+  }
+
+  const usedSlugs = new Set();
+  for (const node of uniqueNodes) {
+    const slug = uniqueSlug(localSlugFromNode(node), usedSlugs);
+    const body = node.body || node.content || `# ${node.title || node.id}\n\n${node.summary || ""}\n`;
+    const data = {
+      ...node,
+      id: slug,
+      protocol_id: node.id,
+      source_node_id: node.id,
+      source_pack_id: manifest.id || loaded.pack.id || "",
+      workspace_copy_status: "proposal",
+      relationships: [
+        ...(Array.isArray(node.relationships) ? node.relationships : []),
+        ...(relationshipsBySource.get(node.id) || [])
+      ]
+    };
+    delete data.imported_from;
+    delete data.pack_id;
+    delete data.pack_mode;
+    writeMarkdownNode(path.join(resolvedTarget, "content", "nodes", `${slug}.md`), data, body);
+  }
+
+  if (options.copySource !== false) {
+    const archiveDir = path.join(workspaceDir(resolvedTarget), "source-pack");
+    fs.cpSync(sourceRoot, archiveDir, {
+      recursive: true,
+      force: true,
+      filter: (src) => !path.relative(sourceRoot, src).split(path.sep).includes(".git")
+    });
+  }
+
+  if (options.git !== false) {
+    ensureGitRepo(resolvedTarget, { defaultBranch: options.defaultBranch || "main" });
+  }
+
+  return openWorkspace(resolvedTarget);
+}
+
 export async function validateWorkspace(rootDir, options = {}) {
   const substrate = await buildSubstrate(path.resolve(rootDir), options.core || {});
   return substrate.validation;
@@ -189,4 +325,29 @@ export function workspaceApi(rootDir) {
       save: (settings) => saveWorkspaceSettings(resolved, settings)
     }
   };
+}
+
+function localSlugFromNode(node) {
+  const idTail = String(node.id || "").split(":").pop()?.replace(/\//g, "-");
+  return slugify(idTail || node.slug || node.title || "node", "node");
+}
+
+function uniqueSlug(base, used) {
+  let slug = base || "node";
+  let index = 2;
+  while (used.has(slug)) {
+    slug = `${base}-${index}`;
+    index += 1;
+  }
+  used.add(slug);
+  return slug;
+}
+
+function uniqueRecordsById(records) {
+  const byId = new Map();
+  for (const record of records) {
+    const key = record?.id || JSON.stringify(record);
+    if (!byId.has(key)) byId.set(key, record);
+  }
+  return [...byId.values()];
 }

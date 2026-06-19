@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { buildWorkspace, computeKnowledgeHealth, createNode, exportWorkspacePack, initWorkspace, openWorkspace } from "../src/index.js";
+import { buildWorkspace, computeKnowledgeHealth, createNode, exportWorkspacePack, initWorkspace, openPackAsWorkspace, openWorkspace } from "../src/index.js";
 
 test("workspace init, node creation, health, and build", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "xananode-workspace-"));
@@ -29,4 +29,30 @@ test("workspace init, node creation, health, and build", async () => {
   assert.ok(fs.existsSync(path.join(exported.outputDir, "nodes.json")));
   assert.ok(fs.existsSync(path.join(exported.outputDir, "relationships.json")));
   assert.equal(exported.pack.manifest.pack.mode, "mounted");
+});
+
+test("opens a substrate pack as an editable working copy", async () => {
+  const source = fs.mkdtempSync(path.join(os.tmpdir(), "xananode-pack-source-"));
+  await initWorkspace(source, { name: "Source Pack", namespace: "source.pack", author: "Source Author", git: false });
+  await createNode(source, {
+    id: "source-claim",
+    title: "A portable claim",
+    type: "claim",
+    summary: "This claim travels in a pack."
+  }, "# A portable claim\n\nPack content should become editable workspace content.\n");
+  const exported = await exportWorkspacePack(source, { out: path.join(source, "packs", "source-pack") });
+
+  const target = fs.mkdtempSync(path.join(os.tmpdir(), "xananode-pack-working-copy-"));
+  fs.rmSync(target, { recursive: true, force: true });
+  const opened = await openPackAsWorkspace(exported.outputDir, target, {
+    author: "Review Author",
+    authorId: "review-author",
+    git: false
+  });
+
+  assert.equal(opened.settings.mode, "working_copy");
+  assert.equal(opened.settings.authorship.status, "proposal");
+  assert.ok(opened.nodes.some((node) => node.protocolId === "source.pack:claim/source-claim"));
+  assert.equal(new Set(opened.nodes.map((node) => node.protocolId)).size, opened.nodes.length);
+  assert.ok(fs.existsSync(path.join(target, ".xananode", "source-pack", "substrate.json")));
 });
