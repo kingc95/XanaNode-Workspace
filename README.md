@@ -21,6 +21,11 @@ Future UIs           human interfaces: catalog, graph/preview, editor panels
 - **Records imports** for federated substrate dependencies.
 - **Validates and builds** via `@xananode/core`.
 - **Computes knowledge health** to identify gaps and quality issues.
+- **Imports and exports multiple substrate transport shapes** through the same Core/Workspace path:
+  - split protocol artifact folders
+  - `substrate-bundle.json`
+  - `substrate-bundle.jsonl`
+  - portable `.substrate` archives
 
 ## Install
 
@@ -85,10 +90,20 @@ xananode-workspace status ./my-substrate
 
 # Build the substrate for preview or export
 xananode-workspace build ./my-substrate --out ./my-substrate/public
+xananode-workspace build ./my-substrate --out ./my-substrate/public --bundle-jsonl
 
 # Save progress as a Git snapshot
 xananode-workspace save ./my-substrate --message "Added first claim and source"
 ```
+
+`build` and `pack` can write different compatible delivery shapes from the same substrate:
+
+- split protocol artifacts
+- `substrate-bundle.json`
+- `substrate-bundle.jsonl`
+- `.substrate` archive
+
+Use `--no-split-artifacts`, `--no-bundle-json`, and `--bundle-jsonl` to choose what gets written.
 
 ## Workspace structure
 
@@ -108,11 +123,17 @@ substrate-root/
 
 ## Local development
 
-This repository includes `@xananode/core` as a Git submodule at `vendor/xananode-core`. This allows workspace development to track protocol changes in real-time.
+When this repo is developed inside `XanaNode-Master`, the live sibling repositories are the source of truth. The root development bridge links `vendor/xananode-core` back to `../XanaNode-Core-SDK`, so Workspace follows Core changes immediately without hand-copying nested files.
 
 ### Setup
 
-Clone with submodules:
+From `XanaNode-Master/`, the preferred stack-level setup is:
+
+```bash
+npm run dev:bootstrap
+```
+
+For a standalone clone of this repo, use the fallback submodule flow:
 
 ```bash
 git clone --recurse-submodules https://github.com/kingc95/XanaNode-Workspace.git
@@ -121,7 +142,7 @@ npm install
 npm test
 ```
 
-If already cloned, initialize the submodule:
+If this repo was already cloned by itself, initialize the fallback submodule:
 
 ```bash
 npm run sdk:init
@@ -130,14 +151,14 @@ npm test
 
 ### Updating the SDK
 
-Move the SDK submodule to the latest upstream `main` commit:
+In a standalone clone, move the fallback SDK submodule to the latest upstream `main` commit:
 
 ```bash
 npm run sdk:update
 npm test
 ```
 
-Check submodule status:
+Check fallback submodule status:
 
 ```bash
 npm run sdk:status
@@ -162,7 +183,9 @@ The workspace engine uses Git internally, but user-facing applications should ex
 
 This package does not depend on rendering engines like Hugo or web frameworks. Future renderers can consume `@xananode/core` and `@xananode/workspace` independently. The core protocol remains the reference implementation.
 
-### Packs as knowledge dependencies
+### Substrates as knowledge dependencies
+
+In current XanaNode language, the thing being exchanged is always another substrate. A `.substrate` file is simply a portable bundled substrate. Some Core and Workspace helper names still use `pack` for backward compatibility, but user-facing tools should teach substrate, `.substrate`, mount, import, merge, and Intertwingle rather than inventing a second conceptual object above the substrate itself.
 
 Substrates can record dependencies on other substrates—like season-level collections, schema packs, domain knowledge, or institutional repositories—in `.xananode/imports.json`. This enables:
 
@@ -171,14 +194,15 @@ Substrates can record dependencies on other substrates—like season-level colle
 - Institutional knowledge bases
 - Cross-workspace collaboration
 
-Workspace imports should remain protocol-shaped. Packs can be mounted or absorbed:
+Workspace imports should remain protocol-shaped. Substrates can be mounted, imported, or merged:
 
 - Mounted packs are enabled at analysis or build time while remaining governed by their source repository.
-- Absorbed packs are reviewed, merged, and made part of the receiving substrate's own authorship.
+- Imported substrates are copied into local generated artifacts with provenance while still preserving source identity.
+- Merged substrates are explicitly reconciled into the receiving substrate's own authorship.
 
-Workspace is the right layer for pack management UX: enable or disable packs, preview what they add, compare versions, show Core merge candidates, and perform an explicit absorption step when the substrate owner accepts incoming records permanently.
+Workspace is the right layer for substrate management UX: enable or disable mounts, preview what they add, compare versions, show Core merge candidates, and perform an explicit import or merge step when the substrate owner accepts incoming records permanently.
 
-A renderer such as XanaNode Hugo can ingest exported node and relationship JSON directly from an `imports/` folder or a configured mounted pack instead of forcing authors to recreate every imported object as Markdown front matter.
+A renderer such as XanaNode Hugo can ingest exported node and relationship JSON directly from an `imports/` folder or a configured mounted substrate instead of forcing authors to recreate every imported object as Markdown front matter.
 
 The intended flow is:
 
@@ -191,29 +215,31 @@ Hugo publishes protocol artifacts plus a read-only viewer
 
 Markdown is an authoring convenience, not the substrate source of truth.
 
-To export a portable pack for Hugo or another projection layer:
+To export a portable `.substrate` for Hugo or another projection layer:
 
 ```bash
 xananode-workspace pack ./my-substrate --out ./packs/my-substrate
 ```
 
-That writes `substrate.json`, `nodes.json`, `relationships.json`, per-node JSON files, and `pack-report.json`. In Studio, the same workflow is the **Export Pack** button. By default it writes to `packs/local` in mounted mode, so the pack remains governed by its source substrate until the author explicitly absorbs or merges it.
+That writes `substrate.json`, `nodes.json`, `relationships.json`, per-node JSON files, and `pack-report.json`. In Studio, the same workflow is the **Export .substrate** action. By default it writes to `packs/local` in mounted mode, so the exported substrate remains governed by its source substrate until the author explicitly imports or merges it elsewhere.
 
-To open a pack someone sent you as editable local work:
+To open a `.substrate` someone sent you as editable local work:
 
 ```bash
 xananode-workspace open-pack ./packs/xananode-canonical ./canonical-working-copy --author "Your Name"
 ```
 
-Workspace calls this a **working copy**. The source pack's node IDs and relationships are preserved for comparison, but your edits are local **proposals** until the source substrate owner accepts them. This is not a silent edit to the original pack and it does not mean you own that substrate's main line of authorship.
+Workspace calls this a **working copy**. The source substrate's node IDs and relationships are preserved for comparison, but your edits are local **proposals** until the source substrate owner accepts them. This is not a silent edit to the original substrate and it does not mean you own that substrate's main line of authorship.
 
-Core should evaluate incoming packs before a renderer or UI applies them. Use Core pack loading and intake analysis to identify possible same-entity merges, new nodes, incoming relationships touching existing nodes, possible transclusions, and possible title/alias links. Workspace records the import dependency and can later expose those Core suggestions in a human review workflow.
+Core should evaluate incoming substrates before a renderer or UI applies them. Use Core pack loading and intake analysis to identify possible same-entity merges, new nodes, incoming relationships touching existing nodes, possible transclusions, and possible title/alias links. Workspace records the import dependency and can later expose those Core suggestions in a human review workflow.
 
 ## Current scope
 
 This is a first-pass engine focused on workspace management and protocol integration. It does not yet implement:
 
 - Live file watching
+- Partial node-by-node permanent intake from a mounted or intertwingled substrate
+- Safe unmount with selective retained merges
 - OAuth/GitHub authentication
 - Conflict-resolution UI
 - Remote sync and publishing

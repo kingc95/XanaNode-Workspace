@@ -6,10 +6,13 @@ import {
   computeKnowledgeHealth,
   createNode,
   exportWorkspacePack,
+  cloneFederationTarget,
   gitLog,
   gitStatus,
   importAssetAsNode,
   initWorkspace,
+  listFederationTargets,
+  mountFederationTarget,
   openPackAsWorkspace,
   openWorkspace,
   saveSnapshot,
@@ -51,8 +54,10 @@ export async function runWorkspaceCli(argv = process.argv) {
     .option("--author-id <id>", "default author id")
     .option("--author-email <email>", "default author email")
     .option("--no-git", "do not initialize a Git repository")
+    .option("--with-hugo", "enable the Hugo projection layer for this workspace")
     .description("create a XanaNode substrate and workspace metadata")
     .action(async (dir, options) => {
+      options.includeHugo = options.withHugo === true;
       const workspace = await initWorkspace(path.resolve(dir), options);
       console.log(`Created XanaNode workspace: ${workspace.manifest.name}`);
       console.log(`Namespace: ${workspace.manifest.namespace}`);
@@ -118,6 +123,9 @@ export async function runWorkspaceCli(argv = process.argv) {
   program.command("build")
     .argument("[dir]", "workspace directory", ".")
     .option("--out <dir>", "artifact output directory")
+    .option("--no-split-artifacts", "skip substrate.json, relationships.json, and nodes/*.json")
+    .option("--no-bundle-json", "skip substrate-bundle.json")
+    .option("--bundle-jsonl", "also write substrate-bundle.jsonl", false)
     .description("build protocol artifacts through @xananode/core")
     .action(async (dir, options) => {
       const result = await buildWorkspace(path.resolve(dir), options);
@@ -135,13 +143,46 @@ export async function runWorkspaceCli(argv = process.argv) {
     .option("--namespace <namespace>", "pack namespace")
     .option("--version <version>", "pack version")
     .option("--mode <mode>", "pack composition mode", "mounted")
+    .option("--no-archive", "write only the unpacked pack folder")
+    .option("--no-split-artifacts", "skip substrate.json, nodes.json, relationships.json, and nodes/*.json")
+    .option("--no-bundle-json", "skip substrate-bundle.json")
+    .option("--bundle-jsonl", "also write substrate-bundle.jsonl", false)
     .description("export a portable substrate pack for renderers such as XanaNode Hugo")
     .action(async (dir, options) => {
+      options.archive = options.archive !== false;
       const result = await exportWorkspacePack(path.resolve(dir), options);
       console.log(`Exported substrate pack to ${result.outputDir}`);
+      if (result.archivePath) console.log(`Archive: ${result.archivePath}`);
       console.log(`Pack: ${result.pack.manifest.id}`);
       console.log(`Nodes: ${result.pack.node_count}`);
       console.log(`Relationships: ${result.pack.relationship_count}`);
+    });
+
+  program.command("federation-targets")
+    .option("--json", "print raw JSON")
+    .description("list known online substrate federation targets from the protocol registry")
+    .action((options) => {
+      const targets = listFederationTargets();
+      if (options.json) return printJson({ federation_targets: targets });
+      for (const target of targets) {
+        console.log(`${target.id} - ${target.name}`);
+        console.log(`  ${target.repository?.url || ""}`);
+      }
+    });
+
+  program.command("federate")
+    .argument("[dir]", "workspace directory", ".")
+    .requiredOption("--target <id>", "federation target id or namespace")
+    .option("--into <dir>", "clone destination directory")
+    .option("--branch <branch>", "branch to clone")
+    .option("--mode <mode>", "mount mode", "mounted")
+    .description("clone a known online substrate target and mount it into this workspace")
+    .action((dir, options) => {
+      const rootDir = path.resolve(dir);
+      const cloneDir = path.resolve(options.into || path.join(rootDir, ".xananode", "federation", options.target));
+      const cloned = cloneFederationTarget(options.target, cloneDir, options);
+      const mounted = mountFederationTarget(rootDir, cloned, { mode: options.mode });
+      printJson({ cloned, mounted });
     });
 
   program.command("author")

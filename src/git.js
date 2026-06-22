@@ -53,9 +53,36 @@ export function gitLog(rootDir, limit = 25) {
   });
 }
 
+export function gitRevision(rootDir) {
+  if (!hasGit(rootDir)) {
+    return {
+      available: false,
+      branch: "",
+      commit: "",
+      dirty: false
+    };
+  }
+  const branch = runGit(rootDir, ["rev-parse", "--abbrev-ref", "HEAD"]);
+  const commit = runGit(rootDir, ["rev-parse", "HEAD"]);
+  const status = gitStatus(rootDir);
+  return {
+    available: branch.ok && commit.ok,
+    branch: branch.ok ? branch.stdout.trim() : "",
+    commit: commit.ok ? commit.stdout.trim() : "",
+    dirty: Boolean(status.changed?.length),
+    changed: status.changed || []
+  };
+}
+
 export function saveSnapshot(rootDir, options = {}) {
   if (!hasGit(rootDir)) ensureGitRepo(rootDir, options);
-  const add = runGit(rootDir, ["add", "."]);
+  const add = runGit(rootDir, [
+    "add",
+    "-A",
+    "--",
+    ".",
+    ":(exclude).xananode/preview-hugo*"
+  ]);
   if (!add.ok) throw new Error(add.stderr || add.stdout || "Failed to stage workspace changes");
   const status = gitStatus(rootDir);
   if (!status.changed.length) return { committed: false, message: "No changes to save", status };

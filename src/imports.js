@@ -32,3 +32,25 @@ export function addImport(rootDir, substrateImport) {
   saveImports(rootDir, file);
   return entry;
 }
+
+export function removeImport(rootDir, importId) {
+  const file = loadImports(rootDir);
+  const key = String(importId || "").trim();
+  file.imports = file.imports.filter((item) => (item.id || item.url) !== key);
+  saveImports(rootDir, file);
+  return { id: key };
+}
+
+export function toggleImportNodeVisibility(rootDir, importId, nodeId, enabled = true) {
+  const file = loadImports(rootDir);
+  const key = String(importId || "").trim();
+  const target = file.imports.find((item) => (item.id || item.url) === key);
+  if (!target) throw new Error(`Unknown import: ${key}`);
+  const disabled = new Set(Array.isArray(target.disabled_node_ids) ? target.disabled_node_ids : []);
+  if (enabled) disabled.delete(nodeId);
+  else disabled.add(nodeId);
+  target.disabled_node_ids = [...disabled];
+  target.updated_at = new Date().toISOString();
+  saveImports(rootDir, file);
+  return target;
+}

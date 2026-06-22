@@ -1,5 +1,7 @@
 export * from "./authors.js";
+export * from "./archive.js";
 export * from "./fs-utils.js";
+export * from "./federation.js";
 export * from "./git.js";
 export * from "./health.js";
 export * from "./imports.js";
