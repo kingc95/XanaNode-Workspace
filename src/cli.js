@@ -30,6 +30,7 @@ function printHealth(health) {
   console.log(`Relationships: ${health.counts.relationships}`);
   console.log(`Fragments: ${health.counts.fragments}`);
   console.log(`Suggestions: ${health.counts.suggestions}`);
+  console.log(`Applied suggestions: ${health.counts.applied_suggestions || 0}`);
   console.log(`Issues: ${health.counts.issues}`);
   if (health.issues.length) {
     console.log("\nTop issues:");
@@ -123,15 +124,22 @@ export async function runWorkspaceCli(argv = process.argv) {
   program.command("build")
     .argument("[dir]", "workspace directory", ".")
     .option("--out <dir>", "artifact output directory")
+    .option("--suggestions-mode <mode>", "review or apply", "review")
     .option("--no-split-artifacts", "skip substrate.json, relationships.json, and nodes/*.json")
     .option("--no-bundle-json", "skip substrate-bundle.json")
     .option("--bundle-jsonl", "also write substrate-bundle.jsonl", false)
     .description("build protocol artifacts through @xananode/core")
     .action(async (dir, options) => {
-      const result = await buildWorkspace(path.resolve(dir), options);
+      const result = await buildWorkspace(path.resolve(dir), {
+        ...options,
+        core: {
+          suggestionMode: options.suggestionsMode
+        }
+      });
       console.log(`Built substrate artifacts to ${result.outputDir}`);
       console.log(`Nodes: ${result.substrate.protocolNodes.length}`);
       console.log(`Relationships: ${result.substrate.relationships.length}`);
+      console.log(`Applied suggestions: ${result.substrate.applied_suggestions?.length || 0}`);
       console.log(`Valid: ${result.substrate.validation.valid}`);
     });
 
@@ -143,6 +151,7 @@ export async function runWorkspaceCli(argv = process.argv) {
     .option("--namespace <namespace>", "pack namespace")
     .option("--version <version>", "pack version")
     .option("--mode <mode>", "pack composition mode", "mounted")
+    .option("--suggestions-mode <mode>", "review or apply", "review")
     .option("--no-archive", "write only the unpacked pack folder")
     .option("--no-split-artifacts", "skip substrate.json, nodes.json, relationships.json, and nodes/*.json")
     .option("--no-bundle-json", "skip substrate-bundle.json")
@@ -150,7 +159,10 @@ export async function runWorkspaceCli(argv = process.argv) {
     .description("export a portable substrate pack for renderers such as XanaNode Hugo")
     .action(async (dir, options) => {
       options.archive = options.archive !== false;
-      const result = await exportWorkspacePack(path.resolve(dir), options);
+      const result = await exportWorkspacePack(path.resolve(dir), {
+        ...options,
+        suggestionMode: options.suggestionsMode
+      });
       console.log(`Exported substrate pack to ${result.outputDir}`);
       if (result.archivePath) console.log(`Archive: ${result.archivePath}`);
       console.log(`Pack: ${result.pack.manifest.id}`);
@@ -215,8 +227,8 @@ export async function runWorkspaceCli(argv = process.argv) {
     .option("--title <title>", "asset node title")
     .option("--type <type>", "media or source")
     .description("copy an asset into the workspace and create a source/media node")
-    .action((dir, file, options) => {
-      const result = importAssetAsNode(path.resolve(dir), path.resolve(file), options);
+    .action(async (dir, file, options) => {
+      const result = await importAssetAsNode(path.resolve(dir), path.resolve(file), options);
       printJson(result);
     });
 

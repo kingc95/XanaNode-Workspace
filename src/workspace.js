@@ -150,6 +150,7 @@ export async function exportWorkspacePack(rootDir, options = {}) {
       dirty: revision.dirty
     },
     includePrivate: options.includePrivate === true,
+    suggestionMode: options.suggestionMode || options.core?.suggestionMode || "review",
     splitArtifacts: options.splitArtifacts,
     bundleJson: options.bundleJson,
     bundleJsonl: options.bundleJsonl

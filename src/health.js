@@ -1,9 +1,18 @@
-import { buildSubstrate } from "@xananode/core";
+import { buildSubstrate, stripMarkdown } from "@xananode/core";
 import { gitStatus } from "./git.js";
 
 function percentage(score, max) {
   if (max <= 0) return 100;
   return Math.max(0, Math.min(100, Math.round((score / max) * 100)));
+}
+
+function normalizeComparableText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 export async function computeKnowledgeHealth(rootDir, options = {}) {
@@ -34,6 +43,15 @@ export async function computeKnowledgeHealth(rootDir, options = {}) {
     if (degree === 0 && node.type !== "fragment") issues.push({ severity: "info", kind: "unlinked_node", node: node.id });
     if (!node.summary) issues.push({ severity: "info", kind: "node_missing_summary", node: node.id });
     if (!node.created_by) issues.push({ severity: "warning", kind: "node_missing_author", node: node.id });
+    const normalizedSummary = normalizeComparableText(node.summary);
+    const normalizedBody = normalizeComparableText(stripMarkdown(node.body || ""));
+    if (normalizedSummary && normalizedBody && normalizedSummary === normalizedBody) {
+      issues.push({
+        severity: "warning",
+        kind: "node_summary_duplicates_content",
+        node: node.id
+      });
+    }
     if (node.type === "claim" && !relationships.some((rel) => rel.target === node.id && ["supports", "evidence_for", "derived_from", "cites"].includes(rel.type))) {
       issues.push({ severity: "warning", kind: "claim_without_visible_support", node: node.id });
     }
@@ -61,11 +79,13 @@ export async function computeKnowledgeHealth(rootDir, options = {}) {
       relationships: relationships.length,
       fragments: substrate.fragments?.length || 0,
       suggestions: substrate.suggestions?.length || 0,
+      applied_suggestions: substrate.applied_suggestions?.length || 0,
       issues: issues.length,
       git_changes: gitStatus(rootDir).changed.length
     },
     valid: substrate.validation?.valid === true,
     issues,
-    suggestions: substrate.suggestions || []
+    suggestions: substrate.suggestions || [],
+    applied_suggestions: substrate.applied_suggestions || []
   };
 }

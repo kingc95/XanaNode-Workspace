@@ -2,6 +2,10 @@
 
 A renderer-independent workspace engine for the XanaNode protocol. It exists to keep workspace, project, and collaboration concerns out of any one presentation layer. CLIs, desktop applications, web editors, and future integrations should be able to use the same workspace initialization, asset management, import tracking, and knowledge health computation.
 
+Canonical protocol statement:
+
+XanaNode is a protocol for independently authored knowledge substrates that preserve relationships, provenance, lineage, disagreement, and addressable fragments, so knowledge can move across tools and media without losing its structure.
+
 This project is a XanaNode-compatible workspace implementation. Canonical specification: `https://github.com/kingc95/XanaNode`. Workspace/reference implementation code is licensed under `Apache-2.0`; protocol documentation is licensed separately under `CC-BY-4.0`.
 
 This package sits between:
@@ -91,6 +95,7 @@ xananode-workspace status ./my-substrate
 # Build the substrate for preview or export
 xananode-workspace build ./my-substrate --out ./my-substrate/public
 xananode-workspace build ./my-substrate --out ./my-substrate/public --bundle-jsonl
+xananode-workspace build ./my-substrate --out ./my-substrate/public --suggestions-mode apply
 
 # Save progress as a Git snapshot
 xananode-workspace save ./my-substrate --message "Added first claim and source"
@@ -104,6 +109,8 @@ xananode-workspace save ./my-substrate --message "Added first claim and source"
 - `.substrate` archive
 
 Use `--no-split-artifacts`, `--no-bundle-json`, and `--bundle-jsonl` to choose what gets written.
+
+Use `--suggestions-mode review` to leave possible autolinks and transclusions as review items, or `--suggestions-mode apply` to let Core rewrite safe suggestions directly into the built substrate artifacts while still reporting what it changed.
 
 ## Workspace structure
 
@@ -187,7 +194,7 @@ This package does not depend on rendering engines like Hugo or web frameworks. F
 
 In current XanaNode language, the thing being exchanged is always another substrate. A `.substrate` file is simply a portable bundled substrate. Some Core and Workspace helper names still use `pack` for backward compatibility, but user-facing tools should teach substrate, `.substrate`, mount, import, merge, and Intertwingle rather than inventing a second conceptual object above the substrate itself.
 
-Substrates can record dependencies on other substrates—like season-level collections, schema packs, domain knowledge, or institutional repositories—in `.xananode/imports.json`. This enables:
+Substrates can record dependencies on other substrates like season-level collections, schema substrates, domain knowledge, or institutional repositories in `.xananode/imports.json`. This enables:
 
 - Modular substrate composition
 - Shared schemas and types
@@ -196,7 +203,7 @@ Substrates can record dependencies on other substrates—like season-level colle
 
 Workspace imports should remain protocol-shaped. Substrates can be mounted, imported, or merged:
 
-- Mounted packs are enabled at analysis or build time while remaining governed by their source repository.
+- Mounted substrates are enabled at analysis or build time while remaining governed by their source repository.
 - Imported substrates are copied into local generated artifacts with provenance while still preserving source identity.
 - Merged substrates are explicitly reconciled into the receiving substrate's own authorship.
 
@@ -231,7 +238,7 @@ xananode-workspace open-pack ./packs/xananode-canonical ./canonical-working-copy
 
 Workspace calls this a **working copy**. The source substrate's node IDs and relationships are preserved for comparison, but your edits are local **proposals** until the source substrate owner accepts them. This is not a silent edit to the original substrate and it does not mean you own that substrate's main line of authorship.
 
-Core should evaluate incoming substrates before a renderer or UI applies them. Use Core pack loading and intake analysis to identify possible same-entity merges, new nodes, incoming relationships touching existing nodes, possible transclusions, and possible title/alias links. Workspace records the import dependency and can later expose those Core suggestions in a human review workflow.
+Core should evaluate incoming substrates before a renderer or UI applies them. Use Core substrate loading and intake analysis to identify possible same-entity merges, new nodes, incoming relationships touching existing nodes, possible transclusions, possible title or alias links, and health signals such as summaries that merely repeat body content. Workspace records the import dependency and can later expose those Core suggestions in either a human review workflow or an apply-on-build workflow.
 
 ## Current scope
 
@@ -253,3 +260,4 @@ These features belong in higher-level UI layers that consume this workspace engi
 ## License
 
 MIT
+
