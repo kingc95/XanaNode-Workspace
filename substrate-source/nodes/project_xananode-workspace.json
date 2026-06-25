@@ -1,0 +1,12 @@
+{
+  "id": "xananode.workspace:project/xananode-workspace",
+  "title": "XanaNode Workspace",
+  "type": "project",
+  "subtype": "workspace_engine",
+  "importance": 5,
+  "summary": "The local-first workspace engine that manages substrate folders, authoring state, imports, assets, builds, and health across XanaNode tools.",
+  "source_url": "https://github.com/kingc95/XanaNode-Workspace",
+  "repository": "kingc95/XanaNode-Workspace",
+  "software_version": "0.1.0",
+  "relationships": []
+}

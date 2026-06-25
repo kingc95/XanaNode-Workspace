@@ -1,0 +1,308 @@
+{
+  "relationships": [
+    {
+      "id": "xananode.workspace:rel/repository-documents-workspace-project",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "documents",
+      "summary": "The repository documents and carries the Workspace project.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/workspace-project-implements-core",
+      "source": "xananode.workspace:project/xananode-workspace",
+      "target": "xananode.core:project/xananode-core-sdk",
+      "type": "implements",
+      "summary": "Workspace builds on the Core SDK to manage protocol-compliant substrates as local-first working directories and transport bundles.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/workspace-project-uses-core-cli-contracts",
+      "source": "xananode.workspace:project/xananode-workspace",
+      "target": "xananode.core:technology/xananode-core-cli",
+      "type": "uses",
+      "summary": "Workspace depends on the Core CLI and library contract for validation, build, bundle, and protocol artifact generation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/workspace-cli-supports-workspace-project",
+      "source": "xananode.workspace:technology/xananode-workspace-cli",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "The Workspace CLI is the machine-facing executable surface of the Workspace engine.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-bin-xananode-workspace",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-bin-xananode-workspace",
+      "type": "contains",
+      "summary": "The Workspace repository contains bin/xananode-workspace.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/bin-xananode-workspace-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-bin-xananode-workspace",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Bin / Xananode Workspace supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-dist-win-x64-build-info",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-dist-win-x64-build-info",
+      "type": "contains",
+      "summary": "The Workspace repository contains dist/win-x64/build-info.json.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-dist-win-x64-readme",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-dist-win-x64-readme",
+      "type": "contains",
+      "summary": "The Workspace repository contains dist/win-x64/README.txt.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-dist-win-x64-xananode-workspace",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:technology/artifact-dist-win-x64-xananode-workspace",
+      "type": "contains",
+      "summary": "The Workspace repository contains dist/win-x64/xananode-workspace.exe.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/dist-win-x64-xananode-workspace-supports-workspace-project",
+      "source": "xananode.workspace:technology/artifact-dist-win-x64-xananode-workspace",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "XanaNode Workspace Windows Executable supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-license",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-license",
+      "type": "contains",
+      "summary": "The Workspace repository contains LICENSE.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-package-lock",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-package-lock",
+      "type": "contains",
+      "summary": "The Workspace repository contains package-lock.json.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-package",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-package",
+      "type": "contains",
+      "summary": "The Workspace repository contains package.json.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-readme",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-readme",
+      "type": "contains",
+      "summary": "The Workspace repository contains README.md.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-archive",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-archive",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/archive.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-archive-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-archive",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Archive supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-authors",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-authors",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/authors.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-authors-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-authors",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Authors supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-cli",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-cli",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/cli.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-cli-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-cli",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Cli supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-federation",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-federation",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/federation.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-federation-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-federation",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Federation supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-fs-utils",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-fs-utils",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/fs-utils.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-fs-utils-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-fs-utils",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Fs Utils supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-git",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-git",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/git.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-git-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-git",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Git supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-health",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-health",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/health.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-health-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-health",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Health supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-imports",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-imports",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/imports.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-imports-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-imports",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Imports supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-index",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-index",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/index.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-index-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-index",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Index supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-media",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-media",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/media.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-media-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-media",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Media supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-src-workspace",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-src-workspace",
+      "type": "contains",
+      "summary": "The Workspace repository contains src/workspace.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/src-workspace-supports-workspace-project",
+      "source": "xananode.workspace:source/artifact-src-workspace",
+      "target": "xananode.workspace:project/xananode-workspace",
+      "type": "supports",
+      "summary": "Src / Workspace supports the Workspace implementation.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-test-cli-test",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-test-cli-test",
+      "type": "contains",
+      "summary": "The Workspace repository contains test/cli.test.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    },
+    {
+      "id": "xananode.workspace:rel/repository-contains-test-workspace-test",
+      "source": "xananode.workspace:source/repository-xananode-workspace",
+      "target": "xananode.workspace:source/artifact-test-workspace-test",
+      "type": "contains",
+      "summary": "The Workspace repository contains test/workspace.test.js.",
+      "asserted_at": "2026-06-25T14:22:34.827Z"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "xananode.workspace:source/repository-xananode-workspace",
+  "title": "XanaNode Workspace Repository",
+  "type": "source",
+  "subtype": "git_repository",
+  "importance": 5,
+  "summary": "Public Git repository for the XanaNode Workspace reference implementation.",
+  "source_url": "https://github.com/kingc95/XanaNode-Workspace",
+  "repository": "kingc95/XanaNode-Workspace",
+  "rights_status": "external",
+  "relationships": []
+}

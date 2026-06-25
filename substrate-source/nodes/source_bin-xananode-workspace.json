@@ -1,0 +1,26 @@
+{
+  "id": "xananode.workspace:source/artifact-bin-xananode-workspace",
+  "title": "Bin / Xananode Workspace",
+  "type": "source",
+  "subtype": "reference_code",
+  "importance": 4,
+  "summary": "bin/xananode-workspace.js is preserved as a raw Workspace source artifact in the XanaNode Workspace substrate.",
+  "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/bin/xananode-workspace.js",
+  "artifact_path": "bin/xananode-workspace.js",
+  "asset_path": "assets/raw/repository/bin/xananode-workspace.js",
+  "asset_role": "repository_source",
+  "media_type": "document",
+  "mime_type": "text/javascript",
+  "rights_status": "Apache-2.0",
+  "content_id": "sha256:443d362e807d60fa9dd9786ff4dba742adb89950b136ad40d2fe64c9d3fda593",
+  "content": "#!/usr/bin/env node\nimport { runWorkspaceCli } from \"../src/cli.js\";\n\nconst wantsJson = process.argv.includes(\"--json\");\n\nrunWorkspaceCli().catch((error) => {\n  if (wantsJson) {\n    console.error(JSON.stringify({\n      ok: false,\n      tool: \"xananode-workspace\",\n      error: {\n        message: error?.message || String(error),\n        stack: error?.stack || null\n      }\n    }, null, 2));\n    process.exit(1);\n  }\n  console.error(error.stack || error.message || String(error));\n  process.exitCode = 1;\n});\n",
+  "source_snapshot": {
+    "captured_at": "2026-06-25T14:22:34.827Z",
+    "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/bin/xananode-workspace.js",
+    "method": "archive",
+    "content_id": "sha256:443d362e807d60fa9dd9786ff4dba742adb89950b136ad40d2fe64c9d3fda593",
+    "rights_status": "Apache-2.0",
+    "tool": "xananode-workspace/tools/build-substrate-source.mjs"
+  },
+  "relationships": []
+}

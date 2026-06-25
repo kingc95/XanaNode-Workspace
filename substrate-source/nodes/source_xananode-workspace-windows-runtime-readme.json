@@ -1,0 +1,26 @@
+{
+  "id": "xananode.workspace:source/artifact-dist-win-x64-readme",
+  "title": "XanaNode Workspace Windows Runtime README",
+  "type": "source",
+  "subtype": "project_document",
+  "importance": 3,
+  "summary": "Runtime notes for the packaged Windows executable surface of XanaNode Workspace.",
+  "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/dist/win-x64/README.txt",
+  "artifact_path": "dist/win-x64/README.txt",
+  "asset_path": "assets/raw/repository/dist/win-x64/README.txt",
+  "asset_role": "repository_source",
+  "media_type": "document",
+  "mime_type": "text/markdown",
+  "rights_status": "Apache-2.0",
+  "content_id": "sha256:6fc05a95ff726d691670c0b3a6522627fe81b6657f711df533c5a9c7b9bc5b05",
+  "content": "xananode-workspace runtime package\n\nExecutable: xananode-workspace.exe\nThe exe is self-contained as a Node runtime launcher.\nThe sibling app/ directory contains the packaged XanaNode implementation tree it loads at runtime.\nNo system-wide Node install is required to run the executable.\n\nKeep the exe and app/ directory together.",
+  "source_snapshot": {
+    "captured_at": "2026-06-25T14:22:34.827Z",
+    "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/dist/win-x64/README.txt",
+    "method": "archive",
+    "content_id": "sha256:6fc05a95ff726d691670c0b3a6522627fe81b6657f711df533c5a9c7b9bc5b05",
+    "rights_status": "Apache-2.0",
+    "tool": "xananode-workspace/tools/build-substrate-source.mjs"
+  },
+  "relationships": []
+}

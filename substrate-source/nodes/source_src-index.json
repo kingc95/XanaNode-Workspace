@@ -1,0 +1,26 @@
+{
+  "id": "xananode.workspace:source/artifact-src-index",
+  "title": "Src / Index",
+  "type": "source",
+  "subtype": "reference_code",
+  "importance": 4,
+  "summary": "src/index.js is preserved as a raw Workspace source artifact in the XanaNode Workspace substrate.",
+  "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/src/index.js",
+  "artifact_path": "src/index.js",
+  "asset_path": "assets/raw/repository/src/index.js",
+  "asset_role": "repository_source",
+  "media_type": "document",
+  "mime_type": "text/javascript",
+  "rights_status": "Apache-2.0",
+  "content_id": "sha256:30d9c4892fcb9f64dec8abd91c69243afe68dfcc98c8f45c06c1af13d36ec61b",
+  "content": "export * from \"./authors.js\";\nexport * from \"./archive.js\";\nexport * from \"./fs-utils.js\";\nexport * from \"./federation.js\";\nexport * from \"./git.js\";\nexport * from \"./health.js\";\nexport * from \"./imports.js\";\nexport * from \"./media.js\";\nexport * from \"./workspace.js\";\n",
+  "source_snapshot": {
+    "captured_at": "2026-06-25T14:22:34.827Z",
+    "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/src/index.js",
+    "method": "archive",
+    "content_id": "sha256:30d9c4892fcb9f64dec8abd91c69243afe68dfcc98c8f45c06c1af13d36ec61b",
+    "rights_status": "Apache-2.0",
+    "tool": "xananode-workspace/tools/build-substrate-source.mjs"
+  },
+  "relationships": []
+}

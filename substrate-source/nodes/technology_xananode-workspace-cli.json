@@ -1,0 +1,10 @@
+{
+  "id": "xananode.workspace:technology/xananode-workspace-cli",
+  "title": "XanaNode Workspace CLI",
+  "type": "technology",
+  "subtype": "cli",
+  "importance": 4,
+  "summary": "The machine-facing command surface for initializing, opening, validating, building, exporting, and federating XanaNode workspaces.",
+  "software_version": "0.1.0",
+  "relationships": []
+}

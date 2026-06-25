@@ -1,0 +1,26 @@
+{
+  "id": "xananode.workspace:source/artifact-src-media",
+  "title": "Src / Media",
+  "type": "source",
+  "subtype": "reference_code",
+  "importance": 4,
+  "summary": "src/media.js is preserved as a raw Workspace source artifact in the XanaNode Workspace substrate.",
+  "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/src/media.js",
+  "artifact_path": "src/media.js",
+  "asset_path": "assets/raw/repository/src/media.js",
+  "asset_role": "repository_source",
+  "media_type": "document",
+  "mime_type": "text/javascript",
+  "rights_status": "Apache-2.0",
+  "content_id": "sha256:65a2181208d5316b780283c036724b22218cc2981e6ed2c7de3e810726589a7e",
+  "content": "import path from \"node:path\";\nimport fs from \"node:fs\";\nimport { analyzeTextIntake, buildSubstrate, slugify, writeMarkdownNode } from \"@xananode/core\";\nimport { copyFileIntoDirectory, ensureDir } from \"./fs-utils.js\";\nimport { getDefaultAuthor } from \"./authors.js\";\n\nconst mediaExtensions = new Set([\".png\", \".jpg\", \".jpeg\", \".gif\", \".webp\", \".svg\", \".mp4\", \".mov\", \".mp3\", \".wav\", \".pdf\"]);\nconst sourceExtensions = new Set([\".pdf\", \".doc\", \".docx\", \".txt\", \".rtf\", \".csv\", \".xlsx\"]);\nconst textIntakeExtensions = new Set([\".txt\", \".md\", \".markdown\", \".csv\", \".json\", \".jsonl\", \".yaml\", \".yml\", \".xml\", \".html\", \".htm\"]);\n\nfunction isTextIntakeFile(filePath) {\n  return textIntakeExtensions.has(path.extname(filePath).toLowerCase());\n}\n\nfunction readTextExcerpt(sourceFile, maxChars = 20000) {\n  const raw = fs.readFileSync(sourceFile, \"utf8\");\n  return raw.slice(0, maxChars);\n}\n\nexport async function createIntakeAnalysisContext(rootDir) {\n  try {\n    const substrate = await buildSubstrate(rootDir, { suggestions: false });\n    return {\n      nodes: substrate.nodes || [],\n      fragments: substrate.fragments || []\n    };\n  } catch {\n    return { nodes: [], fragments: [] };\n  }\n}\n\nexport function inferNodeTypeForFile(filePath, preferredType) {\n  if (preferredType) return preferredType;\n  const ext = path.extname(filePath).toLowerCase();\n  if (sourceExtensions.has(ext)) return \"source\";\n  if (mediaExtensions.has(ext)) return \"media\";\n  return \"source\";\n}\n\nexport async function importAssetAsNode(rootDir, sourceFile, options = {}) {\n  if (!fs.existsSync(sourceFile)) throw new Error(`Asset does not exist: ${sourceFile}`);\n  const author = options.author || getDefaultAuthor(rootDir);\n  const type = inferNodeTypeForFile(sourceFile, options.type);\n  const title = options.title || path.basename(sourceFile, path.extname(sourceFile));\n  const slug = options.slug || slugify(title, \"asset\");\n  const assetDir = path.join(rootDir, \"assets\", type === \"media\" ? \"media\" : \"sources\");\n  const destination = copyFileIntoDirectory(sourceFile, assetDir);\n  const relativeAsset = path.relative(rootDir, destination).replaceAll(path.sep, \"/\");\n  const nodePath = path.join(rootDir, \"content\", \"nodes\", `${slug}.md`);\n  const textExcerpt = isTextIntakeFile(sourceFile) ? readTextExcerpt(sourceFile) : \"\";\n  const analysis = textExcerpt\n    ? analyzeTextIntake(textExcerpt, {\n      title,\n      type,\n      sourceKind: \"text_file\",\n      nodes: options.analysisContext?.nodes || [],\n      fragments: options.analysisContext?.fragments || []\n    })\n    : null;\n  const suggestedRelationships = (analysis?.mention_relationships || []).map((relationship) => ({\n    type: relationship.type,\n    target: relationship.target,\n    summary: relationship.summary\n  }));\n  const relationships = [...(options.relationships || []), ...suggestedRelationships]\n    .filter((relationship, index, list) => {\n      const key = `${relationship.type}:${relationship.target}`;\n      return list.findIndex((item) => `${item.type}:${item.target}` === key) === index;\n    });\n  const body = textExcerpt\n    ? `# ${title}\\n\\nImported asset: \\`${relativeAsset}\\`\\n\\n## Extracted text excerpt\\n\\n${textExcerpt.trim()}\\n`\n    : `# ${title}\\n\\nImported asset: \\`${relativeAsset}\\`\\n`;\n  const nodeData = {\n    title,\n    type,\n    summary: options.summary || analysis?.suggested_summary || `${type === \"media\" ? \"Media\" : \"Source\"} asset imported into this substrate.`,\n    created_by: options.created_by || author?.id || author?.name || \"unknown\",\n    source_url: options.source_url,\n    asset: relativeAsset,\n    media_type: options.media_type,\n    rights_status: options.rights_status || author?.default_license,\n    relationships,\n    intake_analysis: analysis || undefined\n  };\n  ensureDir(path.dirname(nodePath));\n  writeMarkdownNode(nodePath, nodeData, body);\n  return { nodePath, assetPath: destination, nodeData, intakeAnalysis: analysis };\n}\n",
+  "source_snapshot": {
+    "captured_at": "2026-06-25T14:22:34.827Z",
+    "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/src/media.js",
+    "method": "archive",
+    "content_id": "sha256:65a2181208d5316b780283c036724b22218cc2981e6ed2c7de3e810726589a7e",
+    "rights_status": "Apache-2.0",
+    "tool": "xananode-workspace/tools/build-substrate-source.mjs"
+  },
+  "relationships": []
+}

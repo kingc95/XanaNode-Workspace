@@ -1,0 +1,35 @@
+{
+  "id": "xananode.workspace",
+  "name": "XanaNode Workspace Substrate",
+  "version": "0.1.0",
+  "namespace": "xananode.workspace",
+  "description": "A substrate source built directly from the XanaNode Workspace repository, preserving the local-first workspace engine, CLI surface, templates, tests, raw project documents, and packaged executable artifacts as first-class XanaNode records.",
+  "schema_version": "xananode-core@0.5.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kingc95/XanaNode-Workspace.git",
+    "default_branch": "main"
+  },
+  "imports": [
+    "xananode.core"
+  ],
+  "build_metadata": {
+    "built_at": "2026-06-25T14:22:34.827Z",
+    "git_commit": "3a698f00454720731ef043294dedf64ba5316240",
+    "git_branch": "main",
+    "built_by": "xananode-workspace/tools/build-substrate-source.mjs"
+  },
+  "sharing": {
+    "default_shareable": true,
+    "rules": [
+      {
+        "selector": {
+          "namespace": "xananode.workspace"
+        },
+        "shareable": true,
+        "scope": "public",
+        "reason": "The Workspace substrate is intended to be federated as a public implementation source."
+      }
+    ]
+  }
+}

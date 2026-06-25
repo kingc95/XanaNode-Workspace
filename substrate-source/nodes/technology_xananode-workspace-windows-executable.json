@@ -1,0 +1,25 @@
+{
+  "id": "xananode.workspace:technology/artifact-dist-win-x64-xananode-workspace",
+  "title": "XanaNode Workspace Windows Executable",
+  "type": "technology",
+  "subtype": "portable_executable",
+  "importance": 4,
+  "summary": "The packaged Windows executable surface for the XanaNode Workspace reference implementation.",
+  "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/dist/win-x64/xananode-workspace.exe",
+  "artifact_path": "dist/win-x64/xananode-workspace.exe",
+  "asset_path": "assets/raw/repository/dist/win-x64/xananode-workspace.exe",
+  "asset_role": "repository_source",
+  "media_type": "binary",
+  "mime_type": "application/vnd.microsoft.portable-executable",
+  "rights_status": "Apache-2.0",
+  "content_id": "sha256:f9d5e895bf4d8d8db5cd80fb6366bb9621afa89f5b8a7d309e4304fa58a1414c",
+  "source_snapshot": {
+    "captured_at": "2026-06-25T14:22:34.827Z",
+    "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/dist/win-x64/xananode-workspace.exe",
+    "method": "archive",
+    "content_id": "sha256:f9d5e895bf4d8d8db5cd80fb6366bb9621afa89f5b8a7d309e4304fa58a1414c",
+    "rights_status": "Apache-2.0",
+    "tool": "xananode-workspace/tools/build-substrate-source.mjs"
+  },
+  "relationships": []
+}
