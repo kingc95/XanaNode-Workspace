@@ -73,12 +73,18 @@ export async function importAssetAsNode(rootDir, sourceFile, options = {}) {
   const nodeData = {
     title,
     type,
+    subtype: options.subtype,
+    facets: Array.isArray(options.facets) ? options.facets : undefined,
     summary: options.summary || analysis?.suggested_summary || `${type === "media" ? "Media" : "Source"} asset imported into this substrate.`,
     created_by: options.created_by || author?.id || author?.name || "unknown",
+    creator: options.creator,
+    source_name: options.source_name,
     source_url: options.source_url,
     asset: relativeAsset,
+    asset_path: relativeAsset,
     media_type: options.media_type,
     rights_status: options.rights_status || author?.default_license,
+    license_url: options.license_url,
     relationships,
     intake_analysis: analysis || undefined
   };

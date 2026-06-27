@@ -15,7 +15,7 @@
   "content_id": "sha256:5fe759bce1f0b525fd2bc47e1b13bf4b7017ad1055a58f50f2c314ee6b6e28a1",
   "content": "{\n  \"executable\": \"C:\\\\Users\\\\Christian Siefen\\\\Documents\\\\XanaNode-Master\\\\XanaNode-Workspace\\\\dist\\\\win-x64\\\\xananode-workspace.exe\",\n  \"app_dir\": \"C:\\\\Users\\\\Christian Siefen\\\\Documents\\\\XanaNode-Master\\\\XanaNode-Workspace\\\\dist\\\\win-x64\\\\app\",\n  \"built_at\": \"2026-06-25T13:25:59.651Z\",\n  \"node_runtime\": \"v24.16.0\",\n  \"version_output\": \"0.1.0\"\n}",
   "source_snapshot": {
-    "captured_at": "2026-06-25T14:24:42.948Z",
+    "captured_at": "2026-06-27T07:05:44.386Z",
     "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/dist/win-x64/build-info.json",
     "method": "archive",
     "content_id": "sha256:5fe759bce1f0b525fd2bc47e1b13bf4b7017ad1055a58f50f2c314ee6b6e28a1",

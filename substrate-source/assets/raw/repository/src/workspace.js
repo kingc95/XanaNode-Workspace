@@ -455,7 +455,8 @@ export async function createNode(rootDir, node, body = "", options = {}) {
   const title = node.title || "Untitled Node";
   const namespace = loadManifest(rootDir).namespace || "local";
   const desiredSlug = node.slug || node.id || slugify(title, "node");
-  const filePath = uniqueMarkdownNodePath(rootDir, options.path || path.join("content", "nodes", `${desiredSlug}.md`));
+  const provisionalPath = options.path || path.join("content", "nodes", `${desiredSlug}.md`);
+  const filePath = uniqueMarkdownNodePath(rootDir, provisionalPath);
   const slug = path.basename(filePath, path.extname(filePath));
   const data = {
     title,
@@ -476,9 +477,41 @@ export async function updateNode(rootDir, relativeFile, nodeData, body, options 
   const namespace = loadManifest(rootDir).namespace || "local";
   const existing = fs.existsSync(filePath) ? parseFrontMatter(fs.readFileSync(filePath, "utf8"), filePath).data || {} : {};
   const merged = { ...existing, ...nodeData };
-  const shouldRetitle = !merged.imported_from && !merged.source_node_id && !merged.pack_id && merged.pack_mode !== "mounted" && merged.pack_mode !== "imported" && merged.pack_mode !== "merged";
+  const workspaceNodes = await loadMarkdownNodes(rootDir, { includeDrafts: true });
+  const isLocalOwned = !merged.imported_from && !merged.source_node_id && !merged.pack_id && merged.pack_mode !== "mounted" && merged.pack_mode !== "imported" && merged.pack_mode !== "merged";
+  const currentRefs = new Set([
+    existing.protocol_id,
+    existing.id,
+    merged.protocol_id,
+    merged.id
+  ].filter(Boolean));
+  const outgoingRelationships = Array.isArray(merged.relationships)
+    ? merged.relationships.filter((relationship) => relationship?.target)
+    : [];
+  const hasTrailStructure = (Array.isArray(merged.nodes) && merged.nodes.length > 0)
+    || (Array.isArray(merged.branches) && merged.branches.length > 0);
+  const hasIncomingRelationships = workspaceNodes.some((candidate) => {
+    if (!candidate?.fullPath || path.resolve(candidate.fullPath) === path.resolve(filePath)) return false;
+    const relationships = Array.isArray(candidate?.data?.relationships) ? candidate.data.relationships : [];
+    return relationships.some((relationship) => currentRefs.has(relationship?.target));
+  });
+  const isUntethered = outgoingRelationships.length === 0 && !hasIncomingRelationships && !hasTrailStructure;
+  const shouldRetitle = isLocalOwned && isUntethered;
   const nextId = shouldRetitle ? slugify(merged.title || merged.id || existing.title || "node", "node") : slugify(merged.id || existing.id || merged.title || "node", "node");
-  const nextProtocolId = merged.protocol_id && !shouldRetitle ? merged.protocol_id : protocolIdFor(nextId, { ...merged, type: merged.type || existing.type || "concept", title: merged.title || existing.title || nextId }, namespace);
+  const protocolSeed = shouldRetitle
+    ? {
+        ...merged,
+        protocol_id: undefined,
+        protocolId: undefined,
+        type: merged.type || existing.type || "concept",
+        title: merged.title || existing.title || nextId
+      }
+    : {
+        ...merged,
+        type: merged.type || existing.type || "concept",
+        title: merged.title || existing.title || nextId
+      };
+  const nextProtocolId = merged.protocol_id && !shouldRetitle ? merged.protocol_id : protocolIdFor(nextId, protocolSeed, namespace);
   const nextData = {
     ...merged,
     id: nextId,
@@ -492,7 +525,24 @@ export async function updateNode(rootDir, relativeFile, nodeData, body, options 
     fs.renameSync(filePath, nextFilePath);
   }
   writeMarkdownNode(nextFilePath, nextData, body);
+  await pruneDuplicateProtocolFiles(rootDir, nextProtocolId, nextFilePath);
   return { filePath: nextFilePath, data: nextData };
+}
+
+async function pruneDuplicateProtocolFiles(rootDir, protocolId, keepFilePath) {
+  if (!protocolId) return;
+  const nodes = await loadMarkdownNodes(rootDir, { includeDrafts: true });
+  const keepResolved = path.resolve(keepFilePath);
+  const duplicates = nodes.filter((node) => (
+    (node.protocolId || node.protocol_id || node.id) === protocolId
+    && node.fullPath
+    && path.resolve(node.fullPath) !== keepResolved
+  ));
+  for (const duplicate of duplicates) {
+    if (fs.existsSync(duplicate.fullPath)) {
+      fs.rmSync(duplicate.fullPath, { force: true });
+    }
+  }
 }
 
 export async function planNodeDeletion(rootDir, nodeRef, options = {}) {
