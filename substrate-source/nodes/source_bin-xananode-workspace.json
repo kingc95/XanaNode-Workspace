@@ -15,7 +15,7 @@
   "content_id": "sha256:443d362e807d60fa9dd9786ff4dba742adb89950b136ad40d2fe64c9d3fda593",
   "content": "#!/usr/bin/env node\nimport { runWorkspaceCli } from \"../src/cli.js\";\n\nconst wantsJson = process.argv.includes(\"--json\");\n\nrunWorkspaceCli().catch((error) => {\n  if (wantsJson) {\n    console.error(JSON.stringify({\n      ok: false,\n      tool: \"xananode-workspace\",\n      error: {\n        message: error?.message || String(error),\n        stack: error?.stack || null\n      }\n    }, null, 2));\n    process.exit(1);\n  }\n  console.error(error.stack || error.message || String(error));\n  process.exitCode = 1;\n});\n",
   "source_snapshot": {
-    "captured_at": "2026-06-27T07:05:44.386Z",
+    "captured_at": "2026-06-27T16:35:32.292Z",
     "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/bin/xananode-workspace.js",
     "method": "archive",
     "content_id": "sha256:443d362e807d60fa9dd9786ff4dba742adb89950b136ad40d2fe64c9d3fda593",
