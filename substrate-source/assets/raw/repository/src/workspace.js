@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { analyzeSubstrateIntake, buildSubstrate, initSubstrate, loadManifest, loadMarkdownNodes, loadSubstratePack, parseFrontMatter, prepareNodeRemoval, protocolIdFor, writeCanonicalPack, writeMarkdownNode, writeSubstrateArtifacts, slugify } from "@xananode/core";
+import { analyzeSubstrateIntake, buildSubstrate, createRelationshipNodeRecord, initSubstrate, loadManifest, loadMarkdownNodes, loadSubstratePack, parseFrontMatter, prepareNodeRemoval, protocolIdFor, relationshipNodeToRelationshipRecord, writeCanonicalPack, writeMarkdownNode, writeSubstrateArtifacts, slugify } from "@xananode/core";
 import { createSubstrateArchive, extractSubstrateArchive, isSubstrateArchive, readSubstrateArchiveManifest, substrateArchiveFileName } from "./archive.js";
 import { ensureDir, readJsonFile, safeRelativePath, writeJsonFile } from "./fs-utils.js";
 import { addImport, loadImports, removeImport, toggleImportNodeVisibility } from "./imports.js";
@@ -93,7 +93,7 @@ export async function openWorkspace(rootDir, options = {}) {
   if (!fs.existsSync(resolved)) throw new Error(`Workspace directory does not exist: ${resolved}`);
   ensureDir(workspaceDir(resolved));
   scrubWorkspaceManifest(resolved);
-  scrubWorkspaceNodeFiles(resolved);
+  scrubWorkspaceMarkdownFiles(resolved);
   const manifest = loadManifest(resolved, options.manifest || {});
   const settings = loadWorkspaceSettings(resolved);
   const authors = loadAuthors(resolved);
@@ -118,6 +118,7 @@ export async function openWorkspace(rootDir, options = {}) {
 }
 
 export async function buildWorkspace(rootDir, options = {}) {
+  scrubWorkspaceMarkdownFiles(rootDir);
   const settings = loadWorkspaceSettings(rootDir);
   const outputDir = path.resolve(rootDir, options.out || settings.build?.output_dir || "public");
   const substrate = await writeSubstrateArtifacts(path.resolve(rootDir), outputDir, {
@@ -529,6 +530,106 @@ export async function updateNode(rootDir, relativeFile, nodeData, body, options 
   return { filePath: nextFilePath, data: nextData };
 }
 
+export async function createRelationshipNode(rootDir, relationship, options = {}) {
+  const resolved = path.resolve(rootDir);
+  const author = options.author || getDefaultAuthor(resolved);
+  const manifest = loadManifest(resolved);
+  const sourceNode = options.sourceNode || null;
+  const targetNode = options.targetNode || null;
+  const nodes = await loadMarkdownNodes(resolved, { includeDrafts: true });
+  const relationshipSourceRef = relationship.source || sourceNode?.protocolId || sourceNode?.protocol_id || sourceNode?.id;
+  const relationshipTargetRef = relationship.target || targetNode?.protocolId || targetNode?.protocol_id || targetNode?.id;
+  const sourceRecord = sourceNode || nodes.find((node) => [node.protocolId, node.protocol_id, node.id, node.relativeFile].filter(Boolean).map(String).includes(String(relationshipSourceRef))) || null;
+  const targetRecord = targetNode || nodes.find((node) => [node.protocolId, node.protocol_id, node.id, node.relativeFile].filter(Boolean).map(String).includes(String(relationshipTargetRef))) || null;
+  const created = createRelationshipNodeRecord({
+    relationship,
+    sourceNode: sourceRecord || {},
+    targetNode: targetRecord || {},
+    namespace: manifest.namespace || "local",
+    title: options.title,
+    summary: options.summary,
+    body: options.body || "",
+    relativeFile: options.path || "",
+    evidence: options.evidence,
+    confidence: options.confidence,
+    status: options.status,
+    reviewStatus: options.review_status,
+    evidenceStrength: options.evidence_strength,
+    assertedBy: options.asserted_by || author?.id || author?.name || "unknown",
+    assertedAt: options.asserted_at,
+    reviewedBy: options.reviewed_by,
+    importance: options.importance,
+    subtype: options.subtype,
+    relationships: options.relationships || []
+  });
+  const filePath = uniqueMarkdownNodePath(resolved, options.path || path.join("content", "nodes", `${created.id}.md`));
+  const body = options.body || `# ${created.data.title}\n\n`;
+  writeMarkdownNode(filePath, created.data, body);
+  const relationshipNodeRef = created.data.protocol_id || created.data.id;
+  const relationshipNodeSummary = options.summary || `Connect this node to the promoted relationship node: ${created.data.title}.`;
+  const replacementRelationship = () => omitUndefined({
+    type: "related_to",
+    target: relationshipNodeRef,
+    summary: relationshipNodeSummary,
+    ...(relationship.id ? { source_relationship_id: relationship.id } : {}),
+    direction: "outgoing"
+  });
+  for (const endpoint of [sourceRecord, targetRecord]) {
+    if (!endpoint) continue;
+    const endpointRef = endpoint.protocolId || endpoint.protocol_id || endpoint.id;
+    const otherRef = normalizeNodeRef(endpointRef === relationshipSourceRef ? relationshipTargetRef : relationshipSourceRef);
+    const endpointPath = endpoint.fullPath ? path.resolve(endpoint.fullPath) : safeRelativePath(resolved, endpoint.relativeFile || path.join("content", "nodes", `${endpoint.id}.md`));
+    if (!fs.existsSync(endpointPath)) continue;
+    const parsed = parseFrontMatter(fs.readFileSync(endpointPath, "utf8"), endpointPath);
+    const currentData = parsed.data || {};
+    const currentRelationships = Array.isArray(currentData.relationships) ? currentData.relationships : [];
+    const nextRelationships = currentRelationships.filter((candidate) => {
+      if (!candidate || typeof candidate !== "object") return false;
+      const candidateType = candidate.type || "related_to";
+      const candidateTarget = candidate.target || candidate.to || candidate.node || candidate.id;
+      if (relationship.id && candidate.source_relationship_id === relationship.id) return false;
+      if (relationship.id && candidate.id === relationship.id) return false;
+      if (otherRef && normalizeNodeRef(candidateTarget) === otherRef && (
+        normalizeNodeRef(candidateType) === normalizeNodeRef(relationship.type || "related_to")
+        || normalizeNodeRef(candidateType) === normalizeNodeRef("related_to")
+      )) return false;
+      return true;
+    });
+    nextRelationships.push(replacementRelationship());
+    writeMarkdownNode(endpointPath, {
+      ...currentData,
+      relationships: nextRelationships
+    }, parsed.body || endpoint.body || `# ${currentData.title || endpoint.title || endpoint.id}\n\n`);
+  }
+  return { filePath, data: created.data };
+}
+
+export async function collapseRelationshipNode(rootDir, nodeRef, options = {}) {
+  const resolved = path.resolve(rootDir);
+  const nodes = await loadMarkdownNodes(resolved, { includeDrafts: true, ...(options.core || {}) });
+  const targetRef = typeof nodeRef === "string" ? nodeRef : nodeRef?.protocolId || nodeRef?.protocol_id || nodeRef?.id || nodeRef?.relativeFile;
+  const targetNode = nodes.find((node) => {
+    const candidates = [
+      node.id,
+      node.protocolId,
+      node.protocol_id,
+      node.relativeFile,
+      node.fullPath,
+      node.title
+    ].filter(Boolean).map((value) => String(value));
+    return candidates.includes(String(targetRef));
+  });
+  if (!targetNode) throw new Error(`Relationship node not found: ${String(targetRef || nodeRef || "unknown")}`);
+  const filePath = targetNode.fullPath ? path.resolve(targetNode.fullPath) : safeRelativePath(resolved, targetNode.relativeFile || path.join("content", "nodes", `${targetNode.id}.md`));
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Unable to remove relationship node file for ${targetNode.title || targetNode.id}.`);
+  }
+  const relationship = relationshipNodeToRelationshipRecord(targetNode, options.relationship || {});
+  fs.rmSync(filePath, { force: true });
+  pruneEmptyNodeDirectories(path.dirname(filePath), resolved);
+  return { relationship, workspace: await openWorkspace(resolved, options) };
+}
+
 async function pruneDuplicateProtocolFiles(rootDir, protocolId, keepFilePath) {
   if (!protocolId) return;
   const nodes = await loadMarkdownNodes(rootDir, { includeDrafts: true });
@@ -593,6 +694,8 @@ export function workspaceApi(rootDir) {
     deleteNode: (nodeRef, options) => deleteNode(resolved, nodeRef, options),
     createNode: (node, body, options) => createNode(resolved, node, body, options),
     updateNode: (relativeFile, nodeData, body, options) => updateNode(resolved, relativeFile, nodeData, body, options),
+    createRelationshipNode: (relationship, options) => createRelationshipNode(resolved, relationship, options),
+    collapseRelationshipNode: (nodeRef, options) => collapseRelationshipNode(resolved, nodeRef, options),
     importAsset: (sourceFile, options) => importAssetAsNode(resolved, sourceFile, options),
     addImport: (substrateImport) => addImport(resolved, substrateImport),
     authors: {
@@ -749,15 +852,22 @@ function normalizeMountedNodeRecord(node, entry, relationships = []) {
 }
 
 function dedupeWorkspaceNodes(nodes = []) {
-  const seen = new Set();
-  const result = [];
+  const selected = new Map();
   for (const node of nodes) {
     const key = String(node?.protocolId || node?.protocol_id || node?.data?.protocol_id || node?.id || node?.title || "").trim().toLowerCase();
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    result.push(node);
+    if (!key) continue;
+    const candidateMtime = node?.fullPath && fs.existsSync(node.fullPath)
+      ? fs.statSync(node.fullPath).mtimeMs
+      : Number.NEGATIVE_INFINITY;
+    const current = selected.get(key);
+    const currentMtime = current?.fullPath && fs.existsSync(current.fullPath)
+      ? fs.statSync(current.fullPath).mtimeMs
+      : Number.NEGATIVE_INFINITY;
+    if (!current || candidateMtime > currentMtime) {
+      selected.set(key, node);
+    }
   }
-  return result;
+  return [...selected.values()];
 }
 
 function localSlugFromNode(node) {
@@ -807,17 +917,67 @@ function scrubWorkspaceManifest(rootDir) {
   if (changed) writeJsonFile(manifestPath, next);
 }
 
-function scrubWorkspaceNodeFiles(rootDir) {
-  const nodesDir = path.join(rootDir, "content", "nodes");
-  if (!fs.existsSync(nodesDir)) return;
-  for (const filePath of walkMarkdownFiles(nodesDir)) {
-    const parsed = parseFrontMatter(fs.readFileSync(filePath, "utf8"), filePath);
-    const data = parsed?.data && typeof parsed.data === "object" ? parsed.data : {};
-    const normalized = coerceRelationshipLikeNodeData(data);
-    if (JSON.stringify(normalized) !== JSON.stringify(data)) {
-      writeMarkdownNode(filePath, normalized, parsed?.body || "");
-    }
+function scrubWorkspaceMarkdownFiles(rootDir) {
+  const roots = [path.join(rootDir, "content"), path.join(rootDir, "nodes")].filter((r) => fs.existsSync(r));
+  const allFiles = roots.flatMap((r) => walkMarkdownFiles(r));
+
+  // Pass 1: group all files by protocol ID, tracking newest mtime and collecting ALL relationships
+  const grouped = new Map();
+  for (const filePath of allFiles) {
+    try {
+      const raw = fs.readFileSync(filePath, "utf8");
+      const parsed = parseFrontMatter(raw, filePath);
+      const data = parsed?.data && typeof parsed.data === "object" ? parsed.data : {};
+      const protocolId = String(data.protocol_id || data.protocolId || data.id || "").trim();
+      if (!protocolId) continue;
+      const mtimeMs = fs.statSync(filePath).mtimeMs;
+      const existing = grouped.get(protocolId);
+      const fileRels = Array.isArray(data.relationships) ? data.relationships : [];
+      if (!existing) {
+        grouped.set(protocolId, { filePath, mtimeMs, parsed, data, allRels: [...fileRels] });
+      } else {
+        // Merge relationships from this file into the accumulated set
+        for (const rel of fileRels) {
+          const key = `${rel.type}||${rel.target}`;
+          if (!existing.allRels.some((r) => `${r.type}||${r.target}` === key)) {
+            existing.allRels.push(rel);
+          }
+        }
+        // Keep the newest file as canonical
+        if (mtimeMs > existing.mtimeMs) {
+          grouped.set(protocolId, { filePath, mtimeMs, parsed, data, allRels: existing.allRels });
+        }
+      }
+    } catch { /* leave unreadable files; build validation reports them */ }
   }
+
+  const keepFiles = new Set(Array.from(grouped.values()).map((entry) => path.resolve(entry.filePath)));
+
+  // Pass 2: write merged relationships into canonical file, delete stale duplicates
+  for (const filePath of allFiles) {
+    try {
+      const raw = fs.readFileSync(filePath, "utf8");
+      const parsed = parseFrontMatter(raw, filePath);
+      const data = parsed?.data && typeof parsed.data === "object" ? parsed.data : {};
+      const protocolId = String(data.protocol_id || data.protocolId || data.id || "").trim();
+      if (!protocolId) continue;
+      if (!keepFiles.has(path.resolve(filePath))) {
+        fs.rmSync(filePath, { force: true });
+        continue;
+      }
+      // Write the merged relationship set back into the canonical file
+      const entry = grouped.get(protocolId);
+      const mergedData = { ...data, relationships: entry?.allRels ?? data.relationships ?? [] };
+      const normalized = coerceRelationshipLikeNodeData(mergedData);
+      if (JSON.stringify(normalized) !== JSON.stringify(data)) {
+        writeMarkdownNode(filePath, normalized, parsed?.body || "");
+      }
+    } catch { /* ignore; normal build validation surfaces errors */ }
+  }
+}
+
+function scrubWorkspaceNodeFiles(rootDir) {
+  scrubWorkspaceMarkdownFiles(rootDir);
 }
 
 function walkMarkdownFiles(rootDir) {

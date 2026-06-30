@@ -15,7 +15,7 @@
   "content_id": "sha256:6fc05a95ff726d691670c0b3a6522627fe81b6657f711df533c5a9c7b9bc5b05",
   "content": "xananode-workspace runtime package\n\nExecutable: xananode-workspace.exe\nThe exe is self-contained as a Node runtime launcher.\nThe sibling app/ directory contains the packaged XanaNode implementation tree it loads at runtime.\nNo system-wide Node install is required to run the executable.\n\nKeep the exe and app/ directory together.",
   "source_snapshot": {
-    "captured_at": "2026-06-27T16:35:32.292Z",
+    "captured_at": "2026-06-30T05:09:29.991Z",
     "source_url": "https://github.com/kingc95/XanaNode-Workspace/blob/main/dist/win-x64/README.txt",
     "method": "archive",
     "content_id": "sha256:6fc05a95ff726d691670c0b3a6522627fe81b6657f711df533c5a9c7b9bc5b05",
